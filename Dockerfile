@@ -1,10 +1,7 @@
 FROM debian:jessie
+MAINTAINER "onehostcloud.hosting <ben@onehostcloud.hosting>"
 
-MAINTAINER "Patrick O'Doherty <p@trickod.com>"
-
-EXPOSE 9001
 ENV DEBIAN_FRONTEND noninteractive
-
 ADD apt-pinning /etc/apt/preferences.d/pinning
 RUN echo 'deb http://deb.torproject.org/torproject.org jessie main' > /etc/apt/sources.list.d/tor.list && \
     gpg --keyserver keys.gnupg.net --recv 886DDD89 && \
@@ -15,19 +12,15 @@ RUN apt-get update && apt-get install -y \
     openssl \
     tor
 
-# tor-arm does not work in Docker container:
-# _curses.error: setupterm: could not find terminal
-# Install outside of the Docker container if required.
-
-WORKDIR /var/lib/tor
-
+VOLUME /var/lib/tor
 ADD ./torrc /etc/torrc
-# Allow you to upgrade your relay without having to regenerate keys
-# VOLUME /var/lib/tor
-
-VOLUME /.tor
+ADD ./get-tor-hostnames /usr/local/bin/get-tor-hostnames
 
 # Generate a random nickname for the relay
 RUN echo "Nickname docker$(head -c 16 /dev/urandom  | sha1sum | cut -c1-10)" >> /etc/torrc
 
-CMD /usr/bin/tor -f /etc/torrc
+ADD ./docker-entrypoint.sh /usr/local/bin/entrypoint.sh
+ENTRYPOINT ["docker-entrypoint.sh"]
+
+EXPOSE 9001
+CMD /usr/local/bin/tor -f /etc/torrc

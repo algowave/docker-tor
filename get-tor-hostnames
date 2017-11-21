@@ -1,0 +1,27 @@
+#!/bin/bash
+
+TORRC="$1"
+TOR_DATA="$2"
+TOR_PATTERN="tor -f"
+
+# Wait 10sec (tor containers must be UP within this time)
+while [ ! "$(ps -ef |grep -v grep |grep -w "${TOR_PATTERN}")" ]
+do
+  sleep 1
+done
+
+LIST=`grep ^HiddenService ${TORRC}`
+
+while read -r line; do
+ # Print Onion address
+ if [ "`echo $line |grep ^HiddenServiceDir`" ]; then
+  FILE=`echo $line |awk '{print $2"hostname"}'`
+  ADDRESS=`cat $FILE`
+  echo ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
+  echo ">> Onion address ${ADDRESS} is serving the following content:"
+ fi
+ # Print redirected services
+ if [ "`echo $line |grep ^HiddenServicePort`" ]; then
+  echo $line |awk -v ADDR=$ADDRESS '{print ">>   "ADDR":"$2"  redirects to service  "$3}'
+ fi
+done <<< "$LIST"
