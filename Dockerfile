@@ -13,14 +13,14 @@ RUN apt-get update && apt-get install -y \
     tor
 
 VOLUME /var/lib/tor
-ADD ./torrc /etc/torrc
-ADD ./get-tor-hostnames /usr/local/bin/get-tor-hostnames
 
-# Generate a random nickname for the relay
-RUN echo "Nickname docker$(head -c 16 /dev/urandom  | sha1sum | cut -c1-10)" >> /etc/torrc
+COPY ./torrc /etc/torrc
+RUN chown debian-tor:debian-tor /etc/torrc
 
-ADD ./docker-entrypoint.sh /usr/local/bin/entrypoint.sh
-ENTRYPOINT ["docker-entrypoint.sh"]
+COPY ./get-tor-hostnames /usr/local/bin/get-tor-hostnames
+COPY ./docker-entrypoint.sh /usr/local/bin/entrypoint.sh
 
-EXPOSE 9001
-CMD /usr/local/bin/tor -f /etc/torrc
+ENTRYPOINT ["entrypoint.sh"]
+#EXPOSE 9001
+USER debian-tor
+CMD /usr/bin/tor -f /etc/torrc
