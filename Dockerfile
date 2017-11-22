@@ -14,13 +14,12 @@ RUN apt-get update && apt-get install -y \
 
 VOLUME /var/lib/tor
 
-COPY ./torrc /etc/torrc
-RUN chown debian-tor:debian-tor /etc/torrc
+COPY ./torrc /etc/tor/torrc
+RUN chown -R debian-tor:debian-tor /etc/tor/
 
 COPY ./get-tor-hostnames /usr/local/bin/get-tor-hostnames
 COPY ./docker-entrypoint.sh /usr/local/bin/entrypoint.sh
 
-ENTRYPOINT ["entrypoint.sh"]
-#EXPOSE 9001
 USER debian-tor
-CMD /usr/bin/tor -f /etc/torrc
+ENTRYPOINT ["entrypoint.sh"]
+CMD /usr/bin/tor
